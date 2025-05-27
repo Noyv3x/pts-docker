@@ -1,63 +1,70 @@
 name: build-and-push
-
 on:
   push:
-    branches: [ main ]          # 推送即触发
+    branches: [ main ]
   schedule:
-    - cron: '0 2 * * 1'         # 每周一自动刷新
-  workflow_dispatch:            # 手动按钮
+    - cron: '0 2 * * 1'        # 每周一自动刷新
+  workflow_dispatch:          # 手动触发
 
 permissions:
   contents: read
-  packages: write               # 允许推送 GHCR
+  packages: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      ####################################################################
-      # 1. 拉代码
-      ####################################################################
-      - uses: actions/checkout@v4                                      # ⬅️ 拉仓库代码
+      #############################################################
+      # 0️⃣  计算全小写仓库名 —— 解决 “必须小写” 报错
+      #############################################################
+      - name: Get repo name in lowercase
+        id: repo
+        run: |
+          echo "REPO_LOWER=$(echo ${GITHUB_REPOSITORY,,})" >> "$GITHUB_OUTPUT"
 
-      ####################################################################
-      # 2. 安装 QEMU 模块（仅供“交叉编译”使用）
-      ####################################################################
+      #############################################################
+      # 1️⃣  拉代码
+      #############################################################
+      - uses: actions/checkout@v4
+
+      #############################################################
+      # 2️⃣  安装 QEMU（仅用于跨架构**构建**）
+      #############################################################
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3                              # ⬅️ 加载 binfmt
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64,arm,ppc64le,s390x
 
-      ####################################################################
-      # 3. 启用 Buildx（多架构构建引擎）
-      ####################################################################
+      #############################################################
+      # 3️⃣  启用 Buildx
+      #############################################################
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3                            # ⬅️ 创建 builder
+        uses: docker/setup-buildx-action@v3
 
-      ####################################################################
-      # 4. 登录 GHCR（用 GitHub 自动注入的 TOKEN）
-      ####################################################################
+      #############################################################
+      # 4️⃣  登录 GHCR
+      #############################################################
       - name: Log in to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}                       # ⬅️ 默认就有
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      ####################################################################
-      # 5. 生成镜像标签/Label 元数据
-      ####################################################################
-      - name: Extract metadata (tags, labels)
+      #############################################################
+      # 5️⃣  生成标签 / label 元数据
+      #############################################################
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ steps.repo.outputs.REPO_LOWER }}
 
-      ####################################################################
-      # 6. 多架构构建并推送 manifest
-      ####################################################################
-      - name: Build and push (multi-arch)
-        uses: docker/build-push-action@v5                              # ⬅️ 真正构建
+      #############################################################
+      # 6️⃣  多架构构建并推送
+      #############################################################
+      - name: Build & push (multi-arch)
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -68,6 +75,6 @@ jobs:
             linux/ppc64le
             linux/s390x
           tags: |
+            ghcr.io/${{ steps.repo.outputs.REPO_LOWER }}:latest
             ${{ steps.meta.outputs.tags }}
-            ghcr.io/${{ github.repository }}:latest
           labels: ${{ steps.meta.outputs.labels }}
