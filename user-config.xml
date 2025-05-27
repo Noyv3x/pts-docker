@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<PhoronixTestSuite>
+  <Options>
+    <BatchMode>
+      <SaveResults>E</SaveResults>
+      <UploadResultsToOpenBenchmarking>false</UploadResultsToOpenBenchmarking>
+    </BatchMode>
+  </Options>
+</PhoronixTestSuite>
