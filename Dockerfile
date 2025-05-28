@@ -16,7 +16,7 @@ RUN git clone --depth=1 https://github.com/phoronix-test-suite/phoronix-test-sui
 # 禁止默认上传
 COPY user-config.xml /etc/phoronix-test-suite/user-config.xml
 
-RUN useradd -m -u 1000 pts
+RUN useradd -m pts
 USER pts
 WORKDIR /home/pts
 
