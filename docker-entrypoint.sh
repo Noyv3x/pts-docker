@@ -11,8 +11,10 @@ if [ "${PTS_UPLOAD_RESULTS:-0}" = "1" ]; then
 fi
 
 if [ $# -eq 0 ]; then
-  echo "示例： docker run --privileged ghcr.io/<你>/pts benchmark openssl"
+  echo "示例： docker run --privileged ghcr.io/<你>/pts-docker:latest benchmark openssl"
   exit 1
 fi
 
-exec pts "$@"
+# ---- 4. 切到源码根目录再启动，确保能找到 pts-core/ ----
+cd "${PTS_DIR:-/opt/pts}"   # /opt/pts 是 Dockerfile 里克隆的位置
+exec ./phoronix-test-suite "$@"
