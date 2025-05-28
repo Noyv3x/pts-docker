@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      git php-cli php-xml php-zip php-json build-essential \
+      ca-certificates git php-cli php-xml php-zip php-json build-essential \
       lm-sensors pciutils curl unzip && \
     rm -rf /var/lib/apt/lists/*
 
